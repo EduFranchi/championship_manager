@@ -8,6 +8,7 @@ class ChampionshipEntity {
   final String description;
   final DateTime startDate;
   final DateTime endDate;
+  final String? imagePath;
 
   const ChampionshipEntity({
     required this.name,
@@ -16,5 +17,6 @@ class ChampionshipEntity {
     required this.description,
     required this.startDate,
     required this.endDate,
+    this.imagePath,
   });
 }

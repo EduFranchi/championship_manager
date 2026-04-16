@@ -1,7 +1,9 @@
-import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:championship_manager/modules/championship/domain/entity/championship_entity.dart';
 import 'package:championship_manager/modules/championship/domain/entity/enum/sport_type_enum.dart';
 import 'package:championship_manager/modules/championship/domain/entity/enum/championship_format_enum.dart';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class SaveChampionshipView extends StatefulWidget {
   final ChampionshipEntity? championship;
@@ -22,6 +24,7 @@ class _SaveChampionshipViewState extends State<SaveChampionshipView> {
   ChampionshipFormatEnum? _selectedFormat;
   DateTime? _startDate;
   DateTime? _endDate;
+  String? _imagePath;
 
   bool get _isEditing => widget.championship != null;
 
@@ -36,6 +39,7 @@ class _SaveChampionshipViewState extends State<SaveChampionshipView> {
     _selectedFormat = widget.championship?.format;
     _startDate = widget.championship?.startDate;
     _endDate = widget.championship?.endDate;
+    _imagePath = widget.championship?.imagePath;
   }
 
   @override
@@ -63,6 +67,17 @@ class _SaveChampionshipViewState extends State<SaveChampionshipView> {
     });
   }
 
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        _imagePath = pickedFile.path;
+      });
+    }
+  }
+
   void _showSportPicker() {
     showModalBottomSheet(
       context: context,
@@ -78,8 +93,8 @@ class _SaveChampionshipViewState extends State<SaveChampionshipView> {
               child: Text(
                 'Selecionar Esporte',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             const Divider(height: 1),
@@ -126,8 +141,8 @@ class _SaveChampionshipViewState extends State<SaveChampionshipView> {
               child: Text(
                 'Selecionar Formato',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             const Divider(height: 1),
@@ -206,6 +221,7 @@ class _SaveChampionshipViewState extends State<SaveChampionshipView> {
       description: _descriptionController.text.trim(),
       startDate: _startDate!,
       endDate: _endDate!,
+      imagePath: _imagePath,
     );
 
     Navigator.of(context).pop(entity);
@@ -235,6 +251,61 @@ class _SaveChampionshipViewState extends State<SaveChampionshipView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // Seletor de Imagem
+                GestureDetector(
+                  onTap: _pickImage,
+                  child: Container(
+                    height: 180,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(16),
+                      image: _imagePath != null
+                          ? DecorationImage(
+                              image: FileImage(File(_imagePath!)),
+                              fit: BoxFit.contain,
+                            )
+                          : null,
+                    ),
+                    child: _imagePath == null
+                        ? Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.add_a_photo_outlined,
+                                size: 48,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'Adicionar Logo',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          )
+                        : Align(
+                            alignment: Alignment.topRight,
+                            child: IconButton(
+                              onPressed: () =>
+                                  setState(() => _imagePath = null),
+                              icon: Container(
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ),
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
                 // Nome
                 TextFormField(
                   controller: _nameController,

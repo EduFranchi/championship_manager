@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:championship_manager/modules/championship/domain/entity/championship_entity.dart';
 import 'package:championship_manager/modules/championship/domain/entity/enum/sport_type_enum.dart';
 import 'package:championship_manager/modules/championship/domain/entity/enum/championship_format_enum.dart';
 import 'package:championship_manager/modules/championship/presentation/view/save_championship_view.dart';
+import 'package:championship_manager/modules/championship/presentation/view/championship_view.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -227,107 +229,142 @@ class _HomeViewState extends State<HomeView> {
                       itemBuilder: (context, index) {
                         final championship = filteredChampionships[index];
 
-                        return Card(
-                          elevation: 2,
-                          margin: const EdgeInsets.only(bottom: 16.0),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Cabeçalho do Card (Título e Esporte)
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        championship.name,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleLarge
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Chip(
-                                      label: Text(
-                                        championship.sport.label,
-                                        style: const TextStyle(fontSize: 12),
-                                      ),
-                                      backgroundColor: Colors.blue.withValues(
-                                        alpha: 0.1,
-                                      ),
-                                      side: BorderSide.none,
-                                      padding: EdgeInsets.zero,
-                                    ),
-                                  ],
+                        return InkWell(
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => ChampionshipView(
+                                  championship: championship,
                                 ),
-                                const SizedBox(height: 8),
-
-                                // Descrição
-                                Text(
-                                  championship.description,
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                ),
-                                const SizedBox(height: 8),
-
-                                // Formato
-                                Text(
-                                  'Formato: ${championship.format.label}',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.secondary,
-                                    fontWeight: FontWeight.w600,
+                              ),
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(12),
+                          child: Card(
+                            elevation: 2,
+                            margin: const EdgeInsets.only(bottom: 16.0),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Row(
+                                children: [
+                                  // Imagem/Thumbnail do Campeonato
+                                  Container(
+                                    width: 80,
+                                    height: 80,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(8),
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .surfaceContainerHighest,
+                                      image: championship.imagePath != null
+                                          ? DecorationImage(
+                                              image: FileImage(
+                                                File(championship.imagePath!),
+                                              ),
+                                              fit: BoxFit.contain,
+                                            )
+                                          : null,
+                                    ),
+                                    child: championship.imagePath == null
+                                        ? Icon(
+                                            Icons.emoji_events,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary
+                                                .withValues(alpha: 0.5),
+                                          )
+                                        : null,
                                   ),
-                                ),
-                                const SizedBox(height: 16),
+                                  const SizedBox(width: 16),
 
-                                // Datas (Início e Fim)
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.calendar_today,
-                                      size: 16,
-                                      color: Colors.blueGrey,
+                                  // Detalhes do Campeonato
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        // Cabeçalho do Card (Título e Logo)
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                championship.name,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .titleMedium
+                                                    ?.copyWith(
+                                                      fontWeight: FontWeight.bold,
+                                                    ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Chip(
+                                              label: Text(
+                                                championship.sport.label,
+                                                style:
+                                                    const TextStyle(fontSize: 10),
+                                              ),
+                                              backgroundColor: Colors.blue
+                                                  .withValues(alpha: 0.1),
+                                              side: BorderSide.none,
+                                              padding: EdgeInsets.zero,
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 4),
+
+                                        // Descrição
+                                        Text(
+                                          championship.description,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodySmall,
+                                        ),
+                                        const SizedBox(height: 4),
+
+                                        // Formato
+                                        Text(
+                                          'Formato: ${championship.format.label}',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .secondary,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.calendar_today,
+                                              size: 10,
+                                              color: Colors.grey[600],
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              '${_formatDate(championship.startDate)} - ${_formatDate(championship.endDate)}',
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                color: Colors.grey[600],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
                                     ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Início: ${_formatDate(championship.startDate)}',
-                                      style: const TextStyle(
-                                        color: Colors.blueGrey,
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.event_available,
-                                      size: 16,
-                                      color: Colors.blueGrey,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Fim: ${_formatDate(championship.endDate)}',
-                                      style: const TextStyle(
-                                        color: Colors.blueGrey,
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         );
