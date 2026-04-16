@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:championship_manager/modules/championship/presentation/view/save_championship_view.dart';
 import 'package:flutter/material.dart';
 import 'package:championship_manager/modules/championship/domain/entity/championship_entity.dart';
 
@@ -15,6 +16,30 @@ class ChampionshipView extends StatefulWidget {
 }
 
 class _ChampionshipViewState extends State<ChampionshipView> {
+  late ChampionshipEntity _currentChampionship;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentChampionship = widget.championship;
+  }
+
+  Future<void> _editChampionship() async {
+    final result = await Navigator.of(context).push<ChampionshipEntity>(
+      MaterialPageRoute(
+        builder: (_) => SaveChampionshipView(
+          championship: _currentChampionship,
+        ),
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        _currentChampionship = result;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -29,10 +54,17 @@ class _ChampionshipViewState extends State<ChampionshipView> {
                 pinned: true,
                 backgroundColor: Theme.of(context).colorScheme.primary,
                 foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.edit),
+                    tooltip: 'Editar Campeonato',
+                    onPressed: _editChampionship,
+                  ),
+                ],
                 flexibleSpace: FlexibleSpaceBar(
                   centerTitle: true,
                   title: Text(
-                    widget.championship.name,
+                    _currentChampionship.name,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
@@ -50,7 +82,7 @@ class _ChampionshipViewState extends State<ChampionshipView> {
                       ),
                     ),
                     child: Center(
-                      child: widget.championship.imagePath != null
+                      child: _currentChampionship.imagePath != null
                           ? Container(
                               width: 120,
                               height: 120,
@@ -66,7 +98,7 @@ class _ChampionshipViewState extends State<ChampionshipView> {
                                 ],
                                 image: DecorationImage(
                                   image: FileImage(
-                                    File(widget.championship.imagePath!),
+                                    File(_currentChampionship.imagePath!),
                                   ),
                                   fit: BoxFit.contain,
                                 ),
