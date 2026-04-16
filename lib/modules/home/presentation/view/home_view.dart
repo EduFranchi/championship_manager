@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:championship_manager/modules/championship/domain/entity/championship_entity.dart';
+import 'package:championship_manager/modules/championship/domain/entity/enum/sport_type_enum.dart';
+import 'package:championship_manager/modules/championship/presentation/view/save_championship_view.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -8,50 +11,50 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-  // Lista mockada de campeonatos
-  final List<Map<String, String>> championships = [
-    {
-      'name': 'Copa Regional 2026',
-      'sport': 'Futebol de Campo',
-      'description': 'Torneio amador com as equipes da região metropolitana.',
-      'startDate': '15/05/2026',
-      'endDate': '20/07/2026',
-    },
-    {
-      'name': 'Liga Futsal Várzea',
-      'sport': 'Futsal',
-      'description': 'Campeonato longo de pontos corridos interbairros.',
-      'startDate': '10/06/2026',
-      'endDate': '30/08/2026',
-    },
-    {
-      'name': 'Master de Vôlei',
-      'sport': 'Vôlei',
-      'description': 'Competição voltada para atletas acima de 40 anos.',
-      'startDate': '01/12/2026',
-      'endDate': '15/12/2026',
-    },
-    {
-      'name': 'Open de Tênis de Inverno',
-      'sport': 'Tênis',
-      'description': 'Torneio de simples masculino e feminino na cidade.',
-      'startDate': '05/08/2026',
-      'endDate': '20/08/2026',
-    },
-    {
-      'name': 'Circuito de Basquete de Rua',
-      'sport': 'Basquete',
-      'description': 'Times 3x3 competindo pelo título estadual.',
-      'startDate': '12/09/2026',
-      'endDate': '30/09/2026',
-    },
-    {
-      'name': 'Copa Universitária',
-      'sport': 'Futsal',
-      'description': 'Maior torneio de futsal entre as universidades.',
-      'startDate': '01/10/2026',
-      'endDate': '30/11/2026',
-    },
+  // Lista de campeonatos
+  final List<ChampionshipEntity> championships = [
+    ChampionshipEntity(
+      name: 'Copa Regional 2026',
+      sport: SportTypeEnum.soccer,
+      description: 'Torneio amador com as equipes da região metropolitana.',
+      startDate: DateTime(2026, 5, 15),
+      endDate: DateTime(2026, 7, 20),
+    ),
+    ChampionshipEntity(
+      name: 'Liga Futsal Várzea',
+      sport: SportTypeEnum.futsal,
+      description: 'Campeonato longo de pontos corridos interbairros.',
+      startDate: DateTime(2026, 6, 10),
+      endDate: DateTime(2026, 8, 30),
+    ),
+    ChampionshipEntity(
+      name: 'Master de Vôlei',
+      sport: SportTypeEnum.volleyball,
+      description: 'Competição voltada para atletas acima de 40 anos.',
+      startDate: DateTime(2026, 12, 1),
+      endDate: DateTime(2026, 12, 15),
+    ),
+    ChampionshipEntity(
+      name: 'Open de Tênis de Inverno',
+      sport: SportTypeEnum.tennis,
+      description: 'Torneio de simples masculino e feminino na cidade.',
+      startDate: DateTime(2026, 8, 5),
+      endDate: DateTime(2026, 8, 20),
+    ),
+    ChampionshipEntity(
+      name: 'Circuito de Basquete de Rua',
+      sport: SportTypeEnum.basketball,
+      description: 'Times 3x3 competindo pelo título estadual.',
+      startDate: DateTime(2026, 9, 12),
+      endDate: DateTime(2026, 9, 30),
+    ),
+    ChampionshipEntity(
+      name: 'Copa Universitária',
+      sport: SportTypeEnum.futsal,
+      description: 'Maior torneio de futsal entre as universidades.',
+      startDate: DateTime(2026, 10, 1),
+      endDate: DateTime(2026, 11, 30),
+    ),
   ];
 
   // Variáveis de estado para os filtros
@@ -68,15 +71,66 @@ class _HomeViewState extends State<HomeView> {
     'Tênis',
   ];
 
+  String _formatDate(DateTime date) {
+    return '${date.day.toString().padLeft(2, '0')}/'
+        '${date.month.toString().padLeft(2, '0')}/'
+        '${date.year}';
+  }
+
+  void _openMenu() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Text(
+                'Opções',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.add_circle_outline),
+              title: const Text('Adicionar campeonato'),
+              onTap: () async {
+                Navigator.of(context).pop();
+                final result = await Navigator.of(context)
+                    .push<ChampionshipEntity>(
+                      MaterialPageRoute(
+                        builder: (_) => const SaveChampionshipView(),
+                      ),
+                    );
+
+                if (result != null) {
+                  setState(() {
+                    championships.add(result);
+                  });
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Aplicando os filtros na lista mockada
+    // Aplicando os filtros na lista
     final filteredChampionships = championships.where((champ) {
-      final matchesSearch =
-          champ['name']?.toLowerCase().contains(_searchQuery.toLowerCase()) ??
-          false;
+      final matchesSearch = champ.name.toLowerCase().contains(
+        _searchQuery.toLowerCase(),
+      );
       final matchesSport =
-          _selectedSport == 'Todos' || champ['sport'] == _selectedSport;
+          _selectedSport == 'Todos' || champ.sport.label == _selectedSport;
 
       return matchesSearch && matchesSport;
     }).toList();
@@ -85,17 +139,15 @@ class _HomeViewState extends State<HomeView> {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Lista de Campeonatos'),
+          title: const Text('Gerenciador de Campeonatos'),
           centerTitle: true,
           backgroundColor: Theme.of(context).colorScheme.primary,
           foregroundColor: Theme.of(context).colorScheme.onPrimary,
           actions: [
             IconButton(
-              icon: const Icon(Icons.add),
-              tooltip: 'Novo Campeonato',
-              onPressed: () {
-                // TODO: Navegar para a tela de criação ou abrir um modal
-              },
+              icon: const Icon(Icons.menu),
+              tooltip: 'Menu',
+              onPressed: () => _openMenu(),
             ),
           ],
         ),
@@ -181,11 +233,11 @@ class _HomeViewState extends State<HomeView> {
                                 Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     Expanded(
                                       child: Text(
-                                        championship['name'] ?? '',
+                                        championship.name,
                                         style: Theme.of(context)
                                             .textTheme
                                             .titleLarge
@@ -197,7 +249,7 @@ class _HomeViewState extends State<HomeView> {
                                     const SizedBox(width: 8),
                                     Chip(
                                       label: Text(
-                                        championship['sport'] ?? '',
+                                        championship.sport.label,
                                         style: const TextStyle(fontSize: 12),
                                       ),
                                       backgroundColor: Colors.blue.withValues(
@@ -212,7 +264,7 @@ class _HomeViewState extends State<HomeView> {
 
                                 // Descrição
                                 Text(
-                                  championship['description'] ?? '',
+                                  championship.description,
                                   style: Theme.of(context).textTheme.bodyMedium,
                                 ),
                                 const SizedBox(height: 16),
@@ -227,7 +279,7 @@ class _HomeViewState extends State<HomeView> {
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
-                                      'Início: ${championship['startDate']}',
+                                      'Início: ${_formatDate(championship.startDate)}',
                                       style: const TextStyle(
                                         color: Colors.blueGrey,
                                         fontSize: 13,
@@ -245,7 +297,7 @@ class _HomeViewState extends State<HomeView> {
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
-                                      'Fim: ${championship['endDate']}',
+                                      'Fim: ${_formatDate(championship.endDate)}',
                                       style: const TextStyle(
                                         color: Colors.blueGrey,
                                         fontSize: 13,
