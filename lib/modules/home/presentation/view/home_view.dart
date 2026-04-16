@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:championship_manager/modules/championship/domain/entity/championship_entity.dart';
 import 'package:championship_manager/modules/championship/domain/entity/enum/sport_type_enum.dart';
+import 'package:championship_manager/modules/championship/domain/entity/enum/championship_format_enum.dart';
 import 'package:championship_manager/modules/championship/presentation/view/save_championship_view.dart';
 
 class HomeView extends StatefulWidget {
@@ -16,6 +17,7 @@ class _HomeViewState extends State<HomeView> {
     ChampionshipEntity(
       name: 'Copa Regional 2026',
       sport: SportTypeEnum.soccer,
+      format: ChampionshipFormatEnum.knockout,
       description: 'Torneio amador com as equipes da região metropolitana.',
       startDate: DateTime(2026, 5, 15),
       endDate: DateTime(2026, 7, 20),
@@ -23,6 +25,7 @@ class _HomeViewState extends State<HomeView> {
     ChampionshipEntity(
       name: 'Liga Futsal Várzea',
       sport: SportTypeEnum.futsal,
+      format: ChampionshipFormatEnum.pointsSimple,
       description: 'Campeonato longo de pontos corridos interbairros.',
       startDate: DateTime(2026, 6, 10),
       endDate: DateTime(2026, 8, 30),
@@ -30,6 +33,7 @@ class _HomeViewState extends State<HomeView> {
     ChampionshipEntity(
       name: 'Master de Vôlei',
       sport: SportTypeEnum.volleyball,
+      format: ChampionshipFormatEnum.hybridSimple,
       description: 'Competição voltada para atletas acima de 40 anos.',
       startDate: DateTime(2026, 12, 1),
       endDate: DateTime(2026, 12, 15),
@@ -37,6 +41,7 @@ class _HomeViewState extends State<HomeView> {
     ChampionshipEntity(
       name: 'Open de Tênis de Inverno',
       sport: SportTypeEnum.tennis,
+      format: ChampionshipFormatEnum.knockout,
       description: 'Torneio de simples masculino e feminino na cidade.',
       startDate: DateTime(2026, 8, 5),
       endDate: DateTime(2026, 8, 20),
@@ -44,13 +49,15 @@ class _HomeViewState extends State<HomeView> {
     ChampionshipEntity(
       name: 'Circuito de Basquete de Rua',
       sport: SportTypeEnum.basketball,
-      description: 'Times 3x3 competindo pelo título estadual.',
+      format: ChampionshipFormatEnum.hybrid,
+      description: 'Equipes 3x3 competindo pelo título estadual.',
       startDate: DateTime(2026, 9, 12),
       endDate: DateTime(2026, 9, 30),
     ),
     ChampionshipEntity(
       name: 'Copa Universitária',
       sport: SportTypeEnum.futsal,
+      format: ChampionshipFormatEnum.points,
       description: 'Maior torneio de futsal entre as universidades.',
       startDate: DateTime(2026, 10, 1),
       endDate: DateTime(2026, 11, 30),
@@ -65,6 +72,8 @@ class _HomeViewState extends State<HomeView> {
   final List<String> _sportsOptions = [
     'Todos',
     'Futebol de Campo',
+    'Futebol 7',
+    'Futebol Suíço',
     'Futsal',
     'Vôlei',
     'Basquete',
@@ -266,6 +275,19 @@ class _HomeViewState extends State<HomeView> {
                                 Text(
                                   championship.description,
                                   style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                                const SizedBox(height: 8),
+
+                                // Formato
+                                Text(
+                                  'Formato: ${championship.format.label}',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.secondary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                                 const SizedBox(height: 16),
 

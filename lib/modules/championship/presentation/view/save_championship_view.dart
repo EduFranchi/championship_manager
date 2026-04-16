@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:championship_manager/modules/championship/domain/entity/championship_entity.dart';
 import 'package:championship_manager/modules/championship/domain/entity/enum/sport_type_enum.dart';
+import 'package:championship_manager/modules/championship/domain/entity/enum/championship_format_enum.dart';
 
 class SaveChampionshipView extends StatefulWidget {
   final ChampionshipEntity? championship;
@@ -18,6 +19,7 @@ class _SaveChampionshipViewState extends State<SaveChampionshipView> {
   late final TextEditingController _descriptionController;
 
   SportTypeEnum? _selectedSport;
+  ChampionshipFormatEnum? _selectedFormat;
   DateTime? _startDate;
   DateTime? _endDate;
 
@@ -31,6 +33,7 @@ class _SaveChampionshipViewState extends State<SaveChampionshipView> {
       text: widget.championship?.description,
     );
     _selectedSport = widget.championship?.sport;
+    _selectedFormat = widget.championship?.format;
     _startDate = widget.championship?.startDate;
     _endDate = widget.championship?.endDate;
   }
@@ -108,12 +111,74 @@ class _SaveChampionshipViewState extends State<SaveChampionshipView> {
     );
   }
 
+  void _showFormatPicker() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Text(
+                'Selecionar Formato',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+            ),
+            const Divider(height: 1),
+            Flexible(
+              child: ListView(
+                shrinkWrap: true,
+                children: ChampionshipFormatEnum.values
+                    .map(
+                      (format) => ListTile(
+                        title: Text(format.label),
+                        subtitle: Text(
+                          format.description,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context).hintColor,
+                          ),
+                        ),
+                        trailing: _selectedFormat == format
+                            ? Icon(
+                                Icons.check_circle,
+                                color: Theme.of(context).colorScheme.primary,
+                              )
+                            : null,
+                        onTap: () {
+                          setState(() => _selectedFormat = format);
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    )
+                    .toList(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
     if (_selectedSport == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Selecione um esporte.')),
+      );
+      return;
+    }
+
+    if (_selectedFormat == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Selecione um formato de campeonato.')),
       );
       return;
     }
@@ -137,6 +202,7 @@ class _SaveChampionshipViewState extends State<SaveChampionshipView> {
     final entity = ChampionshipEntity(
       name: _nameController.text.trim(),
       sport: _selectedSport!,
+      format: _selectedFormat!,
       description: _descriptionController.text.trim(),
       startDate: _startDate!,
       endDate: _endDate!,
@@ -223,6 +289,30 @@ class _SaveChampionshipViewState extends State<SaveChampionshipView> {
                       _selectedSport?.label ?? 'Selecione um esporte',
                       style: TextStyle(
                         color: _selectedSport == null
+                            ? Theme.of(context).hintColor
+                            : null,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Formato
+                InkWell(
+                  onTap: _showFormatPicker,
+                  borderRadius: BorderRadius.circular(12),
+                  child: InputDecorator(
+                    decoration: InputDecoration(
+                      labelText: 'Formato do Campeonato',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      suffixIcon: const Icon(Icons.arrow_drop_down),
+                    ),
+                    child: Text(
+                      _selectedFormat?.label ?? 'Selecione um formato',
+                      style: TextStyle(
+                        color: _selectedFormat == null
                             ? Theme.of(context).hintColor
                             : null,
                       ),

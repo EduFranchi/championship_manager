@@ -1,5 +1,7 @@
 enum SportTypeEnum {
   soccer,
+  soccer7,
+  soccerSwiss,
   futsal,
   volleyball,
   basketball,
@@ -9,6 +11,8 @@ enum SportTypeEnum {
 
   String get label => switch (this) {
     SportTypeEnum.soccer => 'Futebol de Campo',
+    SportTypeEnum.soccer7 => 'Futebol 7',
+    SportTypeEnum.soccerSwiss => 'Futebol Suíço',
     SportTypeEnum.futsal => 'Futsal',
     SportTypeEnum.volleyball => 'Vôlei',
     SportTypeEnum.basketball => 'Basquete',
