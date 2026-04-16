@@ -26,7 +26,10 @@ class _ChampionshipViewState extends State<ChampionshipView>
   void initState() {
     super.initState();
     _currentChampionship = widget.championship;
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(
+      length: _isKnockout ? 2 : 3,
+      vsync: this,
+    );
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
         setState(() {});
@@ -161,11 +164,19 @@ class _ChampionshipViewState extends State<ChampionshipView>
                 labelColor: Theme.of(context).colorScheme.primary,
                 unselectedLabelColor: Colors.grey,
                 indicatorColor: Theme.of(context).colorScheme.primary,
-                tabs: const [
-                  Tab(text: 'Tabela', icon: Icon(Icons.table_chart)),
-                  Tab(text: 'Rodadas', icon: Icon(Icons.list_alt)),
-                  Tab(text: 'Equipes', icon: Icon(Icons.groups)),
-                ],
+                tabs: _isKnockout
+                    ? const [
+                        Tab(
+                          text: 'Eliminatórias',
+                          icon: Icon(Icons.account_tree),
+                        ),
+                        Tab(text: 'Equipes', icon: Icon(Icons.groups)),
+                      ]
+                    : const [
+                        Tab(text: 'Tabela', icon: Icon(Icons.table_chart)),
+                        Tab(text: 'Rodadas', icon: Icon(Icons.list_alt)),
+                        Tab(text: 'Equipes', icon: Icon(Icons.groups)),
+                      ],
               ),
             ),
           ),
@@ -179,6 +190,14 @@ class _ChampionshipViewState extends State<ChampionshipView>
   }
 
   Widget _buildActiveTabContent() {
+    if (_isKnockout) {
+      return switch (_tabController.index) {
+        0 => SliverToBoxAdapter(child: _buildKnockoutBrackets()),
+        1 => _buildTeamsList(),
+        _ => const SliverToBoxAdapter(child: SizedBox.shrink()),
+      };
+    }
+
     if (!_isPointsFormat) {
       return SliverToBoxAdapter(
         child: _buildPlaceholder(
@@ -199,9 +218,238 @@ class _ChampionshipViewState extends State<ChampionshipView>
     };
   }
 
+  Widget _buildKnockoutBrackets() {
+    // Simulando um campeonato com 53 equipes (cenário solicitado pelo usuário)
+    const int startingTeamsCount = 53;
+    final List<_RoundInfo> rounds = _calculateKnockoutRounds(startingTeamsCount);
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: List.generate(rounds.length, (index) {
+            final round = rounds[index];
+
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildBracketColumn(
+                  round.name,
+                  round.matchCount,
+                  exemptCount: round.exemptCount,
+                  isFinal: round.teamsCount == 2,
+                ),
+                if (round.teamsCount > 2) _buildBracketDivider(),
+              ],
+            );
+          }),
+        ),
+      ),
+    );
+  }
+
+  String _getRoundName(int teamsInRound, int totalTeams, int roundIndex) {
+    if (teamsInRound == 2) return 'Final';
+    if (teamsInRound == 4) return 'Semifinal';
+    if (teamsInRound == 8) return 'Quartas de Final';
+    if (teamsInRound == 16) return 'Oitavas de Final';
+
+    // Acima de 16, segue a lógica de 1ª Fase, 2ª Fase, etc.
+    return '${roundIndex + 1}ª Fase ($teamsInRound)';
+  }
+
+  Widget _buildBracketColumn(
+    String title,
+    int matchCount, {
+    int exemptCount = 0,
+    bool isFinal = false,
+  }) {
+    return SizedBox(
+      width: 280,
+      child: Column(
+        children: [
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+          ),
+          if (exemptCount > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 4.0),
+              child: Text(
+                '$exemptCount equipes isentas',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.orange,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          const SizedBox(height: 24),
+          ...List.generate(matchCount, (index) {
+            return _buildKnockoutMatchCard(isFinal && index == 0);
+          }),
+          if (isFinal) ...[
+            const SizedBox(height: 48),
+            Text(
+              'Disputa de 3º Lugar',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildKnockoutMatchCard(false, isThirdPlace: true),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBracketDivider() {
+    return const SizedBox(
+      width: 40,
+      child: Center(
+        child: Icon(Icons.chevron_right, color: Colors.grey, size: 20),
+      ),
+    );
+  }
+
+  Widget _buildKnockoutMatchCard(
+    bool isGrandFinal, {
+    bool isThirdPlace = false,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isGrandFinal
+              ? Theme.of(context).colorScheme.primary
+              : Colors.grey.withValues(alpha: 0.2),
+          width: isGrandFinal ? 2 : 1,
+        ),
+        boxShadow: isGrandFinal
+            ? [
+                BoxShadow(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : null,
+      ),
+      child: Column(
+        children: [
+          _buildKnockoutTeamRow('Equipe A', '2', true),
+          const Divider(height: 1),
+          _buildKnockoutTeamRow('Equipe B', '1', false),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildKnockoutTeamRow(String name, String score, bool isWinner) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 10,
+            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+            child: Icon(
+              Icons.shield,
+              size: 10,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              name,
+              style: TextStyle(
+                fontWeight: isWinner ? FontWeight.bold : FontWeight.normal,
+                color: isWinner ? null : Colors.grey,
+              ),
+            ),
+          ),
+          Text(
+            score,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: isWinner
+                  ? Theme.of(context).colorScheme.primary
+                  : Colors.grey,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  bool get _isKnockout =>
+      _currentChampionship.format == ChampionshipFormatEnum.knockout;
+
   bool get _isPointsFormat =>
       _currentChampionship.format == ChampionshipFormatEnum.pointsSimple ||
       _currentChampionship.format == ChampionshipFormatEnum.points;
+
+  List<_RoundInfo> _calculateKnockoutRounds(int startingTeams) {
+    List<_RoundInfo> rounds = [];
+    int currentTeams = startingTeams;
+    int roundIndex = 0;
+
+    // Se não for potência de 2, a primeira fase é especial (Equipes Isentas)
+    if (!_isPowerOfTwo(currentTeams)) {
+      final int nextPowerOfTwo = _highestPowerOfTwoLessThan(currentTeams);
+      final int matches = currentTeams - nextPowerOfTwo;
+      final int exempt = currentTeams - (2 * matches);
+
+      rounds.add(_RoundInfo(
+        teamsCount: currentTeams,
+        matchCount: matches,
+        exemptCount: exempt,
+        name: _getRoundName(currentTeams, startingTeams, roundIndex),
+      ));
+
+      currentTeams = nextPowerOfTwo;
+      roundIndex++;
+    }
+
+    // Rodadas subsequentes (Sempre potências de 2)
+    while (currentTeams >= 2) {
+      rounds.add(_RoundInfo(
+        teamsCount: currentTeams,
+        matchCount: currentTeams ~/ 2,
+        exemptCount: 0,
+        name: _getRoundName(currentTeams, startingTeams, roundIndex),
+      ));
+      currentTeams ~/= 2;
+      roundIndex++;
+    }
+
+    return rounds;
+  }
+
+  bool _isPowerOfTwo(int n) => n > 0 && (n & (n - 1)) == 0;
+
+  int _highestPowerOfTwoLessThan(int n) {
+    if (n < 1) return 0;
+    int p = 1;
+    while (p * 2 < n) {
+      p *= 2;
+    }
+    return p;
+  }
 
   bool get _isFootball => [
     SportTypeEnum.soccer,
@@ -593,4 +841,18 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
     return false;
   }
+}
+
+class _RoundInfo {
+  final int teamsCount;
+  final int matchCount;
+  final int exemptCount;
+  final String name;
+
+  _RoundInfo({
+    required this.teamsCount,
+    required this.matchCount,
+    required this.exemptCount,
+    required this.name,
+  });
 }
