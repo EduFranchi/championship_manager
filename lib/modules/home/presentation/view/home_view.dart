@@ -58,7 +58,7 @@ class _HomeViewState extends State<HomeView> {
     ),
     ChampionshipEntity(
       name: 'Copa Universitária',
-      sport: SportTypeEnum.futsal,
+      sport: SportTypeEnum.futmesa,
       format: ChampionshipFormatEnum.points,
       description: 'Maior torneio de futsal entre as universidades.',
       startDate: DateTime(2026, 10, 1),
@@ -70,16 +70,10 @@ class _HomeViewState extends State<HomeView> {
   String _searchQuery = '';
   String _selectedSport = 'Todos';
 
-  // Opções de filtro de esporte
-  final List<String> _sportsOptions = [
+  // Opções de filtro de esporte geradas dinamicamente do enum
+  List<String> get _sportsOptions => [
     'Todos',
-    'Futebol de Campo',
-    'Futebol 7',
-    'Futebol Suíço',
-    'Futsal',
-    'Vôlei',
-    'Basquete',
-    'Tênis',
+    ...SportTypeEnum.values.map((s) => s.label),
   ];
 
   String _formatDate(DateTime date) {
@@ -150,7 +144,12 @@ class _HomeViewState extends State<HomeView> {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Gerenciador de Campeonatos'),
+          title: const Text(
+            'Gerenciador de Campeonatos',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           centerTitle: true,
           backgroundColor: Theme.of(context).colorScheme.primary,
           foregroundColor: Theme.of(context).colorScheme.onPrimary,
@@ -256,9 +255,9 @@ class _HomeViewState extends State<HomeView> {
                                     height: 80,
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(8),
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .surfaceContainerHighest,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.surfaceContainerHighest,
                                       image: championship.imagePath != null
                                           ? DecorationImage(
                                               image: FileImage(
@@ -300,7 +299,8 @@ class _HomeViewState extends State<HomeView> {
                                                     .textTheme
                                                     .titleMedium
                                                     ?.copyWith(
-                                                      fontWeight: FontWeight.bold,
+                                                      fontWeight:
+                                                          FontWeight.bold,
                                                     ),
                                               ),
                                             ),
@@ -308,8 +308,9 @@ class _HomeViewState extends State<HomeView> {
                                             Chip(
                                               label: Text(
                                                 championship.sport.label,
-                                                style:
-                                                    const TextStyle(fontSize: 10),
+                                                style: const TextStyle(
+                                                  fontSize: 10,
+                                                ),
                                               ),
                                               backgroundColor: Colors.blue
                                                   .withValues(alpha: 0.1),
@@ -325,9 +326,9 @@ class _HomeViewState extends State<HomeView> {
                                           championship.description,
                                           maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodySmall,
+                                          style: Theme.of(
+                                            context,
+                                          ).textTheme.bodySmall,
                                         ),
                                         const SizedBox(height: 4),
 
@@ -336,9 +337,9 @@ class _HomeViewState extends State<HomeView> {
                                           'Formato: ${championship.format.label}',
                                           style: TextStyle(
                                             fontSize: 11,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .secondary,
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.secondary,
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),

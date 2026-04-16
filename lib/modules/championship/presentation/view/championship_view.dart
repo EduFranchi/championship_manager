@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:championship_manager/modules/championship/domain/entity/enum/sport_type_enum.dart';
+import 'package:championship_manager/modules/championship/domain/entity/enum/championship_format_enum.dart';
 import 'package:championship_manager/modules/championship/presentation/view/save_championship_view.dart';
 import 'package:flutter/material.dart';
 import 'package:championship_manager/modules/championship/domain/entity/championship_entity.dart';
@@ -15,13 +17,27 @@ class ChampionshipView extends StatefulWidget {
   State<ChampionshipView> createState() => _ChampionshipViewState();
 }
 
-class _ChampionshipViewState extends State<ChampionshipView> {
+class _ChampionshipViewState extends State<ChampionshipView>
+    with SingleTickerProviderStateMixin {
   late ChampionshipEntity _currentChampionship;
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
     _currentChampionship = widget.championship;
+    _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        setState(() {});
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<void> _editChampionship() async {
@@ -42,110 +58,380 @@ class _ChampionshipViewState extends State<ChampionshipView> {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        body: NestedScrollView(
-          headerSliverBuilder: (context, innerBoxIsScrolled) {
-            return [
-              SliverAppBar(
-                expandedHeight: 200.0,
-                floating: false,
-                pinned: true,
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.edit),
-                    tooltip: 'Editar Campeonato',
-                    onPressed: _editChampionship,
-                  ),
-                ],
-                flexibleSpace: FlexibleSpaceBar(
-                  centerTitle: true,
-                  title: Text(
+    return Scaffold(
+      body: CustomScrollView(
+        physics: const ClampingScrollPhysics(),
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 200.0,
+            floating: false,
+            pinned: true,
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            foregroundColor: Theme.of(context).colorScheme.onPrimary,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.edit),
+                tooltip: 'Editar Campeonato',
+                onPressed: _editChampionship,
+              ),
+            ],
+            flexibleSpace: FlexibleSpaceBar(
+              centerTitle: true,
+              title: LayoutBuilder(
+                builder: (context, constraints) {
+                  // Determina se a AppBar está colapsada (ou próxima disso)
+                  final settings = context
+                      .dependOnInheritedWidgetOfExactType<
+                        FlexibleSpaceBarSettings
+                      >();
+                  final bool isCollapsed =
+                      settings != null &&
+                      settings.currentExtent <=
+                          settings.minExtent +
+                              MediaQuery.of(context).padding.top +
+                              10;
+
+                  return Text(
                     _currentChampionship.name,
-                    style: const TextStyle(
+                    maxLines: isCollapsed ? 1 : 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: isCollapsed
+                          ? Theme.of(context).colorScheme.onPrimary
+                          : Colors.black,
                       fontWeight: FontWeight.bold,
-                      fontSize: 18,
                     ),
-                  ),
-                  background: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Theme.of(context).colorScheme.primary,
-                          Theme.of(context).colorScheme.primaryContainer,
-                        ],
-                      ),
-                    ),
-                    child: Center(
-                      child: _currentChampionship.imagePath != null
-                          ? Container(
-                              width: 120,
-                              height: 120,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.2),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                                image: DecorationImage(
-                                  image: FileImage(
-                                    File(_currentChampionship.imagePath!),
-                                  ),
-                                  fit: BoxFit.contain,
-                                ),
-                              ),
-                            )
-                          : Icon(
-                              Icons.emoji_events,
-                              size: 80,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onPrimary.withValues(alpha: 0.3),
-                            ),
-                    ),
-                  ),
-                ),
+                  );
+                },
               ),
-              SliverToBoxAdapter(
-                child: _buildSummaryCard(),
-              ),
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: _SliverAppBarDelegate(
-                  TabBar(
-                    labelColor: Theme.of(context).colorScheme.primary,
-                    unselectedLabelColor: Colors.grey,
-                    indicatorColor: Theme.of(context).colorScheme.primary,
-                    tabs: const [
-                      Tab(text: 'Tabela', icon: Icon(Icons.table_chart)),
-                      Tab(text: 'Rodadas', icon: Icon(Icons.list_alt)),
-                      Tab(text: 'Equipes', icon: Icon(Icons.groups)),
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Theme.of(context).colorScheme.primary,
+                      Theme.of(context).colorScheme.primaryContainer,
                     ],
                   ),
                 ),
+                child: Center(
+                  child: _currentChampionship.imagePath != null
+                      ? Container(
+                          width: 120,
+                          height: 120,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.2),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                            image: DecorationImage(
+                              image: FileImage(
+                                File(_currentChampionship.imagePath!),
+                              ),
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        )
+                      : Icon(
+                          Icons.emoji_events,
+                          size: 80,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onPrimary.withValues(alpha: 0.3),
+                        ),
+                ),
               ),
-            ];
-          },
-          body: TabBarView(
-            children: [
-              _buildPlaceholder('A tabela de classificação aparecerá aqui.'),
-              _buildPlaceholder(
-                'A listagem de rodadas e jogos aparecerá aqui.',
-              ),
-              _buildPlaceholder(
-                'A lista de equipes participantes aparecerá aqui.',
-              ),
-            ],
+            ),
           ),
+          SliverToBoxAdapter(
+            child: _buildSummaryCard(),
+          ),
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _SliverAppBarDelegate(
+              TabBar(
+                controller: _tabController,
+                labelColor: Theme.of(context).colorScheme.primary,
+                unselectedLabelColor: Colors.grey,
+                indicatorColor: Theme.of(context).colorScheme.primary,
+                tabs: const [
+                  Tab(text: 'Tabela', icon: Icon(Icons.table_chart)),
+                  Tab(text: 'Rodadas', icon: Icon(Icons.list_alt)),
+                  Tab(text: 'Equipes', icon: Icon(Icons.groups)),
+                ],
+              ),
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.only(bottom: 32),
+            sliver: _buildActiveTabContent(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActiveTabContent() {
+    if (!_isPointsFormat) {
+      return SliverToBoxAdapter(
+        child: _buildPlaceholder(
+          _tabController.index == 0
+              ? 'A tabela de classificação aparecerá aqui.'
+              : _tabController.index == 1
+              ? 'A listagem de rodadas e jogos aparecerá aqui.'
+              : 'A lista de equipes participantes aparecerá aqui.',
+        ),
+      );
+    }
+
+    return switch (_tabController.index) {
+      0 => SliverToBoxAdapter(child: _buildPointsTable()),
+      1 => _buildRoundsList(),
+      2 => _buildTeamsList(),
+      _ => const SliverToBoxAdapter(child: SizedBox.shrink()),
+    };
+  }
+
+  bool get _isPointsFormat =>
+      _currentChampionship.format == ChampionshipFormatEnum.pointsSimple ||
+      _currentChampionship.format == ChampionshipFormatEnum.points;
+
+  bool get _isFootball => [
+    SportTypeEnum.soccer,
+    SportTypeEnum.soccer7,
+    SportTypeEnum.soccerSwiss,
+    SportTypeEnum.futsal,
+  ].contains(_currentChampionship.sport);
+
+  bool get _isBasketball =>
+      _currentChampionship.sport == SportTypeEnum.basketball;
+
+  Widget _buildPointsTable() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const ClampingScrollPhysics(),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          minWidth: MediaQuery.of(context).size.width,
+        ),
+        child: DataTable(
+          columnSpacing: 20,
+          headingRowColor: WidgetStateProperty.all(
+            Theme.of(
+              context,
+            ).colorScheme.primaryContainer.withValues(alpha: 0.3),
+          ),
+          columns: [
+            const DataColumn(
+              label: Text('#', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+            const DataColumn(
+              label: Text(
+                'Equipe',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            const DataColumn(
+              label: Text('P', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+            const DataColumn(
+              label: Text('J', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+            const DataColumn(
+              label: Text('V', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+            if (_isFootball)
+              const DataColumn(
+                label: Text(
+                  'E',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            const DataColumn(
+              label: Text('D', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+            if (_isFootball)
+              const DataColumn(
+                label: Text(
+                  'SG',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            if (_isBasketball)
+              const DataColumn(
+                label: Text(
+                  'SC',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+          ],
+          rows: List.generate(
+            5,
+            (index) => DataRow(
+              cells: [
+                DataCell(Text('${index + 1}')),
+                DataCell(
+                  Row(
+                    children: [
+                      const CircleAvatar(
+                        radius: 12,
+                        child: Icon(Icons.shield, size: 12),
+                      ),
+                      const SizedBox(width: 8),
+                      Text('Equipe ${index + 1}'),
+                    ],
+                  ),
+                ),
+                DataCell(Text('${(5 - index) * 3}')),
+                const DataCell(Text('5')),
+                DataCell(Text('${5 - index}')),
+                if (_isFootball) const DataCell(Text('0')),
+                DataCell(Text('$index')),
+                if (_isFootball) DataCell(Text('${(5 - index) * 2}')),
+                if (_isBasketball) DataCell(Text('${(5 - index) * 10}')),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRoundsList() {
+    return SliverPadding(
+      padding: const EdgeInsets.all(16),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, roundIndex) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '${roundIndex + 1}ª Rodada',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                    const Text(
+                      '15/05/2026',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                ...List.generate(2, (matchIndex) {
+                  final isFinished = matchIndex == 0;
+                  return Card(
+                    elevation: 0,
+                    color:
+                        Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest.withValues(
+                          alpha: 0.5,
+                        ),
+                    margin: const EdgeInsets.only(bottom: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Equipe ${matchIndex + 1}',
+                              textAlign: TextAlign.right,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 4,
+                            ),
+                            decoration: isFinished
+                                ? BoxDecoration(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.surface,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: Colors.grey.withValues(alpha: 0.2),
+                                    ),
+                                  )
+                                : null,
+                            child: Text(
+                              isFinished ? '2 × 1' : '×',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                letterSpacing: 2,
+                                color: isFinished ? null : Colors.grey,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Equipe ${matchIndex + 3}',
+                              textAlign: TextAlign.left,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+                const SizedBox(height: 16),
+              ],
+            );
+          },
+          childCount: 3,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTeamsList() {
+    return SliverPadding(
+      padding: const EdgeInsets.all(8),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            return ListTile(
+              leading: CircleAvatar(
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                child: Icon(
+                  Icons.shield,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              title: Text('Equipe ${index + 1}'),
+              subtitle: const Text('Cidade da Equipe'),
+              trailing: const Icon(Icons.chevron_right, size: 20),
+              onTap: () {
+                // Futura navegação para detalhes da equipe
+              },
+            );
+          },
+          childCount: 8,
         ),
       ),
     );
@@ -166,12 +452,12 @@ class _ChampionshipViewState extends State<ChampionshipView> {
                 _buildInfoItem(
                   Icons.sports_soccer,
                   'Esporte',
-                  widget.championship.sport.label,
+                  _currentChampionship.sport.label,
                 ),
                 _buildInfoItem(
                   Icons.format_list_bulleted,
                   'Formato',
-                  widget.championship.format.label,
+                  _currentChampionship.format.label,
                 ),
               ],
             ),
@@ -184,16 +470,16 @@ class _ChampionshipViewState extends State<ChampionshipView> {
                 _buildInfoItem(
                   Icons.calendar_today,
                   'Início',
-                  _formatDate(widget.championship.startDate),
+                  _formatDate(_currentChampionship.startDate),
                 ),
                 _buildInfoItem(
                   Icons.event_available,
                   'Fim',
-                  _formatDate(widget.championship.endDate),
+                  _formatDate(_currentChampionship.endDate),
                 ),
               ],
             ),
-            if (widget.championship.description.isNotEmpty) ...[
+            if (_currentChampionship.description.isNotEmpty) ...[
               const SizedBox(height: 16),
               Align(
                 alignment: Alignment.centerLeft,
@@ -208,7 +494,7 @@ class _ChampionshipViewState extends State<ChampionshipView> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  widget.championship.description,
+                  _currentChampionship.description,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ),
@@ -226,21 +512,24 @@ class _ChampionshipViewState extends State<ChampionshipView> {
         children: [
           Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
           const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
-              ),
-            ],
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
